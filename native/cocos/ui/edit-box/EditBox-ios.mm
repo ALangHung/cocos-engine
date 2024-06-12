@@ -434,7 +434,7 @@ static EditboxManager *instance = nil;
                           initWithFrame:CGRectMake(0,
                                                    0,
                                                    safeView.size.width,
-                                                   TEXT_LINE_HEIGHT + ITEM_MARGIN_HEIGHT)];
+                                                   0)];
     [toolbar setBackgroundColor:[UIColor darkGrayColor]];
     
     UITextField* textField = [[UITextField alloc] init];
@@ -455,7 +455,7 @@ static EditboxManager *instance = nil;
                             initWithFrame:CGRectMake(0,
                                                      0,
                                                      BUTTON_WIDTH,
-                                                     BUTTON_HEIGHT)];
+                                                     0)];
     [confirmBtn addTarget:btnHandler
                    action:@selector(buttonTapped:)
          forControlEvents:UIControlEventTouchUpInside];
@@ -469,9 +469,11 @@ static EditboxManager *instance = nil;
     
     [toolbar setItems:@[textFieldItem, confirm] animated:YES];
     
-    
+    toolbar.hidden = YES;
     UIBarButtonItem* textFieldBarButtonItem = [self setInputWidthOf:toolbar];
+   
     ((UITextField*)[inputbox inputOnView]).inputAccessoryView = toolbar;
+   
     [inputbox setInputOnToolbar:textFieldBarButtonItem.customView];
     
     //release for NON ARC ENV

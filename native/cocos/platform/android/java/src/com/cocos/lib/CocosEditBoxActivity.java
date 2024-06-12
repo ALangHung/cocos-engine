@@ -70,6 +70,7 @@ public class CocosEditBoxActivity extends Activity {
     private boolean mConfirmHold = true;
     private int mEditTextID = 1;
     private int mButtonLayoutID = 2;
+    private static float keyboardHeightRate = 0;
 
     /***************************************************************************************
      Inner class.
@@ -79,6 +80,7 @@ public class CocosEditBoxActivity extends Activity {
         private boolean mIsMultiLine = false;
         private TextWatcher mTextWatcher = null;
         private boolean keyboardVisible = false;
+
         private int mScreenHeight;
         private boolean mCheckKeyboardShowNormally = false;
 
@@ -227,11 +229,12 @@ public class CocosEditBoxActivity extends Activity {
                     Rect r = new Rect();
                     getWindowVisibleDisplayFrame(r);
                     int heightDiff = getRootView().getHeight() - (r.bottom - r.top);
-                    // if more than a quarter of the screen, its probably a keyboard
                     if (heightDiff > mScreenHeight/4) {
                         if (!keyboardVisible) {
                             keyboardVisible = true;
                         }
+                        keyboardHeightRate = (float) heightDiff / getRootView().getHeight();
+                        onKeyboardHeightRateChange(keyboardHeightRate);
                         if (!isSystemAdjustUIWhenPopKeyboard(heightDiff)) {
                             getRootView().scrollTo(0, heightDiff);
                         }
@@ -248,6 +251,12 @@ public class CocosEditBoxActivity extends Activity {
                 }
             });
         }
+    }
+
+    private void onKeyboardHeightRateChange(float keyboardHeightRate) {
+        Intent intent = new Intent("com.example.ACTION_DATA_CHANGED");
+        intent.putExtra("keyboardHeightRate", keyboardHeightRate);
+        sendBroadcast(intent);
     }
 
     @Override
@@ -306,6 +315,7 @@ public class CocosEditBoxActivity extends Activity {
     private void addItems(RelativeLayout layout) {
         RelativeLayout myLayout = new RelativeLayout(this);
         myLayout.setBackgroundColor(Color.argb(255, 244, 244, 244));
+        myLayout.setVisibility(View.INVISIBLE);//--//
 
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT);
