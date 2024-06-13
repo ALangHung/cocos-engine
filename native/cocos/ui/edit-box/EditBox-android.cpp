@@ -79,7 +79,17 @@ void EditBox::show(const cc::EditBox::ShowInfo &showInfo) {
                                     showInfo.isMultiline,
                                     showInfo.confirmHold,
                                     showInfo.confirmType,
-                                    showInfo.inputType);
+                                    showInfo.inputType,
+                                    showInfo.x,
+                                    showInfo.y,
+                                    showInfo.width,
+                                    showInfo.height,
+                                    showInfo.uvX,
+                                    showInfo.uvY,
+                                    showInfo.uvWidth,
+                                    showInfo.uvHeight,
+                                    showInfo.fontSize,
+                                    static_cast<int>(showInfo.fontColor));
     _isShown = true;
 }
 

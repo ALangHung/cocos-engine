@@ -85,6 +85,7 @@
             const delegate = this._delegate;
             const multiline = (delegate.inputMode === InputMode.ANY);
             const rect = this._getRect();
+            const uvRect = this._getUVRect();
             this.setMaxLength(delegate.maxLength);
 
             let inputTypeString = getInputType(delegate.inputMode);
@@ -119,6 +120,10 @@
             }
 
             const editLabel = delegate.textLabel;
+            const node = this._delegate.node;
+            node.getWorldMatrix(worldMat);
+            const fontSize = editLabel.fontSize / worldMat.m05;
+
             jsb.inputBox.show({
                 defaultValue: delegate.string,
                 maxLength: self._maxLength,
@@ -130,11 +135,15 @@
                 originY: rect.y,
                 width: rect.width,
                 height: rect.height,
+                uvX: uvRect.uvX,
+                uvY: uvRect.uvY,
+                uvWidth: uvRect.uvWidth,
+                uvHeight: uvRect.uvHeight,
                 isBold: editLabel.isBold,
                 isItalic: editLabel.isItalic,
                 isUnderline: editLabel.isUnderline,
                 underlineColor: 0x00000000/* Black */,
-                fontSize: /**number */editLabel.fontSize,
+                fontSize: /**float */fontSize,
                 fontColor: /**number */editLabel.color.toRGBValue(),
                 backColor: 0x00ffffff/*White*/,
                 backgroundColor: delegate.placeholderLabel.color.toRGBValue(),
@@ -168,11 +177,22 @@
         }
 
         _getRect () {
+            console.log("==========_getRect==========");
+            let canvasSize = cc.view.getCanvasSize();
+            console.log("canvasSize: " + canvasSize);
+            let visibleSize = cc.view.getVisibleSize();
+            console.log("visibleSize: " + visibleSize);
+            let visibleSizeInPixel = cc.view.getVisibleSizeInPixel();
+            console.log("visibleSizeInPixel: " + visibleSizeInPixel);
             const node = this._delegate.node;
             let viewScaleX = cc.view._scaleX;
             let viewScaleY = cc.view._scaleY;
             const dpr = jsb.device.getDevicePixelRatio() || 1;
             node.getWorldMatrix(worldMat);
+            console.log("viewScaleX: " + viewScaleX);
+            console.log("viewScaleY: " + viewScaleY);
+            console.log("dpr: " + dpr);
+            console.log("worldMat: " + worldMat);
 
             const transform = node._uiProps.uiTransformComp;
             const vec3 = cc.v3();
@@ -185,26 +205,98 @@
                 height = contentSize.height;
                 vec3.x = -anchorPoint.x * width;
                 vec3.y = -anchorPoint.y * height;
+
+                console.log("contentSize: " + contentSize);
+                console.log("anchorPoint: " + anchorPoint);
+                console.log("width: " + width);
+                console.log("height: " + height);
             }
 
+
             const translate = new cc.Mat4();
+            console.log("translate: " + translate);
             cc.Mat4.fromTranslation(translate, vec3);
+            console.log("translate2: " + translate);
             cc.Mat4.multiply(worldMat, translate, worldMat);
+            console.log("worldMat2: " + worldMat);
 
             viewScaleX /= dpr;
             viewScaleY /= dpr;
+            console.log("viewScaleX: " + viewScaleX);
+            console.log("viewScaleY: " + viewScaleY);
 
             const finalScaleX = worldMat.m00 * viewScaleX;
             const finaleScaleY = worldMat.m05 * viewScaleY;
+            console.log("worldMat.m00: " + worldMat.m00);
+            console.log("worldMat.m05: " + worldMat.m05);
+            console.log("finalScaleX: " + finalScaleX);
+            console.log("finaleScaleY: " + finaleScaleY);
 
             const viewportRect = cc.view._viewportRect;
             const offsetX = viewportRect.x / dpr;
                 const offsetY = viewportRect.y / dpr;
+
+            console.log("viewportRect.x: " + viewportRect.x);
+            console.log("viewportRect.y: " + viewportRect.y);
+            console.log("worldMat.m12: " + worldMat.m12);
+            console.log("worldMat.m13: " + worldMat.m13);
+            console.log("return x: " + worldMat.m12 * viewScaleX + offsetX);
+            console.log("return y: " + worldMat.m13 * viewScaleY + offsetY);
+            console.log("return width: " + width * finalScaleX);
+            console.log("return height: " + height * finaleScaleY);
+
             return {
                 x: worldMat.m12 * viewScaleX + offsetX,
                 y: worldMat.m13 * viewScaleY + offsetY,
                 width: width * finalScaleX,
                 height: height * finaleScaleY,
+            };
+        }
+
+        _getUVRect() {
+            console.log("==========_getUVRect==========");
+            const node = this._delegate.node;
+            node.getWorldMatrix(worldMat);
+            let visibleSize = cc.view.getVisibleSize();
+            let uvX = 0;
+            let uvY = 0;
+            let width = 0;
+            let height = 0;
+            let uvWidth = 0;
+            let uvHeight = 0;
+            let originX = worldMat.m12;
+            let originY = worldMat.m13;
+            
+            const transform = node._uiProps.uiTransformComp;
+            if (transform) {
+                const contentSize = transform.contentSize;
+                const anchorPoint = transform.anchorPoint;
+                console.log("contentSize: " + contentSize);
+                console.log("anchorPoint: " + anchorPoint);
+
+                width = contentSize.width * worldMat.m00;
+                height = contentSize.height * worldMat.m05;
+                console.log("width: " + width);
+                console.log("height: " + height);
+                uvWidth = width / visibleSize.width;
+                uvHeight = height / visibleSize.height;
+                console.log("uvWidth: " + uvWidth);
+                console.log("uvHeight: " + uvHeight);
+
+                originX = worldMat.m12 - width * (1 - anchorPoint.x);
+                originY = worldMat.m13 - height * (1 - anchorPoint.y);
+                console.log("originX: " + originX);
+                console.log("originY: " + originY);
+            }
+            uvX = originX / visibleSize.width;
+            uvY = originY / visibleSize.height;
+            console.log("uvX: " + uvX);
+            console.log("uvY: " + uvY);
+            return {
+                uvX: uvX,
+                uvY: uvY,
+                uvWidth: uvWidth,
+                uvHeight: uvHeight,
             };
         }
     }

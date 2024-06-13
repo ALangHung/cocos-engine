@@ -45,10 +45,15 @@ public:
         int y = 0;
         int width = 0;
         int height = 0;
+        float uvX = 0;
+        float uvY = 0;
+        float uvWidth = 0;
+        float uvHeight = 0;
         bool confirmHold = false;
         bool isMultiline = false;
         //NEW PROPERTIES
-        uint32_t fontSize = 20;
+        // uint32_t fontSize = 20;
+        float fontSize = 20;
         uint32_t fontColor = 0x00000000;
         uint32_t backColor = 0x00000000; //font back color
         uint32_t backgroundColor = 0x00000000;

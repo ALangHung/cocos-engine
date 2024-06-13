@@ -29,7 +29,7 @@ import { screenAdapter } from 'pal/screen-adapter';
 import { BitmapFont } from '../../2d/assets';
 import { director } from '../../game/director';
 import { game } from '../../game';
-import { Mat4, Vec3, visibleRect, sys } from '../../core';
+import { Mat4, Vec3, visibleRect, sys, isValid } from '../../core';
 import { view, View } from '../view';
 import { KeyCode } from '../../input/types';
 import { contains } from '../../core/utils/misc';
@@ -138,10 +138,20 @@ export class EditBoxImpl extends EditBoxImplBase {
     }
 
     private _resize (): void {
+        if (isValid(this._delegate) == false) {
+            // console.log("[EditBoxImpl][_resize] this._delegate is unvalid.");
+            return;
+        }
+
         this._delegate!.node.hasChangedFlags = 1;
     }
 
     public update (): void {
+        if (isValid(this._delegate) == false) {
+            // console.log("[EditBoxImpl][update] this._delegate is unvalid.");
+            return;
+        }
+
         const node = this._delegate!.node;
         if (!node.hasChangedFlags) {
             return;

@@ -16,10 +16,20 @@
         "typescript"
     ],
     "editor.codeActionsOnSave": {
-        "source.fixAll": true,
+        "source.fixAll": "explicit"
     },
     "files.associations": {
-        "iterator": "cpp"
+        "iterator": "cpp",
+        "xstring": "cpp",
+        "xiosbase": "cpp",
+        "iosfwd": "cpp",
+        "chrono": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "stop_token": "cpp",
+        "xlocale": "cpp",
+        "xloctime": "cpp",
+        "xmemory": "cpp"
     },
     "cmake.configureOnOpen": false,
 }

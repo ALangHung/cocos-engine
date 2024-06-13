@@ -898,10 +898,38 @@ static bool JSB_showInputBox(se::State &s) { // NOLINT
                 showInfo.height = tmp.toInt32();
             }
         }
+        if (obj->getProperty("uvX", &tmp)) {
+            SE_PRECONDITION2(tmp.isNumber(), false, "uvX is invalid!");
+            if (!tmp.isUndefined()) {
+                showInfo.uvX = tmp.toFloat();
+            }
+        }
+
+        if (obj->getProperty("uvY", &tmp)) {
+            SE_PRECONDITION2(tmp.isNumber(), false, "uvY is invalid!");
+            if (!tmp.isUndefined()) {
+                showInfo.uvY = tmp.toFloat();
+            }
+        }
+
+        if (obj->getProperty("uvWidth", &tmp)) {
+            SE_PRECONDITION2(tmp.isNumber(), false, "uvWidth is invalid!");
+            if (!tmp.isUndefined()) {
+                showInfo.uvWidth = tmp.toFloat();
+            }
+        }
+
+        if (obj->getProperty("uvHeight", &tmp)) {
+            SE_PRECONDITION2(tmp.isNumber(), false, "uvHeight is invalid!");
+            if (!tmp.isUndefined()) {
+                showInfo.uvHeight = tmp.toFloat();
+            }
+        }
+
         if (obj->getProperty("fontSize", &tmp)) {
             SE_PRECONDITION2(tmp.isNumber(), false, "fontSize is invalid!");
             if (!tmp.isUndefined()) {
-                showInfo.fontSize = tmp.toUint32();
+                showInfo.fontSize = tmp.toFloat();
             }
         }
         if (obj->getProperty("fontColor", &tmp)) {

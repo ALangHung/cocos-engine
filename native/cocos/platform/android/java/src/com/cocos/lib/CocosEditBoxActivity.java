@@ -59,6 +59,8 @@ import android.widget.Toast;
 
 public class CocosEditBoxActivity extends Activity {
 
+    public static final String TAG = "CocosEditBoxActivity";
+
     // a color of dark green, was used for confirm button background
     private static final int DARK_GREEN = Color.parseColor("#1fa014");
     private static final int DARK_GREEN_PRESS = Color.parseColor("#008e26");
@@ -86,7 +88,6 @@ public class CocosEditBoxActivity extends Activity {
 
         public  Cocos2dxEditText(Activity context){
             super(context);
-            this.setTextColor(Color.BLACK);
             mScreenHeight = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).
                     getDefaultDisplay().getHeight();
 
@@ -114,9 +115,13 @@ public class CocosEditBoxActivity extends Activity {
          Public functions.
          **************************************************************************************/
 
-        public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType) {
+        public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, float fontSize, int fontColor) {
             mIsMultiLine = isMultiline;
             this.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength) });
+            Log.i(TAG, "show fontColor: " + fontColor);
+            this.setTextColor(fontColor);
+//            this.setTextColor(Color.BLACK);
+            this.setTextSize(fontSize);
             this.setText(defaultValue);
             if (this.getText().length() >= defaultValue.length()) {
                 this.setSelection(defaultValue.length());
@@ -233,6 +238,9 @@ public class CocosEditBoxActivity extends Activity {
                         if (!keyboardVisible) {
                             keyboardVisible = true;
                         }
+                        Log.i(TAG, "getRootView().getHeight(): " + getRootView().getHeight());
+                        Log.i(TAG, "heightDiff: " + heightDiff);
+
                         keyboardHeightRate = (float) heightDiff / getRootView().getHeight();
                         onKeyboardHeightRateChange(keyboardHeightRate);
                         if (!isSystemAdjustUIWhenPopKeyboard(heightDiff)) {
@@ -293,15 +301,34 @@ public class CocosEditBoxActivity extends Activity {
                 false,
                 false,
                 "done",
-                "text"
-                );
+                "text",
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                20,
+                0);
         } else {
             show(extras.getString("defaultValue"),
                 extras.getInt("maxLength"),
                 extras.getBoolean("isMultiline"),
                 extras.getBoolean("confirmHold"),
                 extras.getString("confirmType"),
-                extras.getString("inputType"));
+                extras.getString("inputType"),
+                extras.getInt("x"),
+                extras.getInt("y"),
+                extras.getInt("width"),
+                extras.getInt("height"),
+                extras.getFloat("uvX"),
+                extras.getFloat("uvY"),
+                extras.getFloat("uvWidth"),
+                extras.getFloat("uvHeight"),
+                extras.getFloat("fontSize"),
+                extras.getInt("fontColor"));
         }
     }
 
@@ -315,7 +342,7 @@ public class CocosEditBoxActivity extends Activity {
     private void addItems(RelativeLayout layout) {
         RelativeLayout myLayout = new RelativeLayout(this);
         myLayout.setBackgroundColor(Color.argb(255, 244, 244, 244));
-        myLayout.setVisibility(View.INVISIBLE);//--//
+//        myLayout.setVisibility(View.INVISIBLE);//--//
 
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -335,7 +362,8 @@ public class CocosEditBoxActivity extends Activity {
         mEditText = new Cocos2dxEditText(this);
         mEditText.setVisibility(View.INVISIBLE);
         mEditText.setGravity(Gravity.CENTER_VERTICAL);
-        mEditText.setBackground(getRoundRectShape(18, Color.WHITE, Color.WHITE));
+//        mEditText.setBackground(getRoundRectShape(18, Color.WHITE, Color.WHITE));
+        mEditText.setBackground(getRoundRectShape(18, Color.YELLOW, Color.YELLOW));
         mEditText.setId(mEditTextID);
         int bottomPadding = dpToPixel(4);
         int leftPadding = dpToPixel(3);
@@ -403,9 +431,40 @@ public class CocosEditBoxActivity extends Activity {
         finish();
     }
 
-    public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType) {
+    public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, float fontSize, int fontColor) {
+        Log.i(TAG, "defaultValue: " + defaultValue);
+        Log.i(TAG, "maxLength: " + maxLength);
+        Log.i(TAG, "isMultiline: " + isMultiline);
+        Log.i(TAG, "confirmHold: " + confirmHold);
+        Log.i(TAG, "confirmType: " + confirmType);
+        Log.i(TAG, "inputType: " + inputType);
+        Log.i(TAG, "x: " + x);
+        Log.i(TAG, "y: " + y);
+        Log.i(TAG, "width: " + width);
+        Log.i(TAG, "height: " + height);
+        Log.i(TAG, "uvX: " + uvX);
+        Log.i(TAG, "uvY: " + uvY);
+        Log.i(TAG, "uvWidth: " + uvWidth);
+        Log.i(TAG, "uvHeight: " + uvHeight);
+        Log.i(TAG, "fontSize: " + fontSize);
+        Log.i(TAG, "fontColor: " + fontColor);
+
+        // ABGR to ARGB conversion
+        int alpha = 0xFF;
+        Log.i(TAG, "fontColor alpha: " + alpha);
+        int blue = (fontColor >> 16) & 0xFF;
+        Log.i(TAG, "fontColor blue: " + blue);
+        int green = (fontColor >> 8) & 0xFF;
+        Log.i(TAG, "fontColor green: " + green);
+        int red = fontColor & 0xFF;
+        Log.i(TAG, "fontColor red: " + red);
+
+        // Create Color object
+        int colorInt = (alpha << 24) | (red << 16) | (green << 8) | blue;
+        Log.i(TAG, "fontColor colorInt: " + colorInt);
+
         mConfirmHold = confirmHold;
-        mEditText.show(defaultValue, maxLength, isMultiline, confirmHold, confirmType, inputType);
+        mEditText.show(defaultValue, maxLength, isMultiline, confirmHold, confirmType, inputType, x, y, width, height, uvX, uvY, uvWidth, uvHeight, fontSize, colorInt);
         mButton.setText(mButtonTitle);
         if (TextUtils.isEmpty(mButtonTitle)) {
             mButton.setVisibility(View.INVISIBLE);
@@ -432,7 +491,8 @@ public class CocosEditBoxActivity extends Activity {
      Functions invoked by CPP.
      **************************************************************************************/
 
-    private static void showNative(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType) {
+    private static void showNative(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, float fontSize, int fontColor) {
+        Log.i(CocosEditBoxActivity.TAG, "fontSize: " + fontSize);
 
         GlobalObject.runOnUiThread(new Runnable() {
             @Override
@@ -444,6 +504,16 @@ public class CocosEditBoxActivity extends Activity {
                 i.putExtra("confirmHold", confirmHold);
                 i.putExtra("confirmType", confirmType);
                 i.putExtra("inputType", inputType);
+                i.putExtra("x", x);
+                i.putExtra("y", y);
+                i.putExtra("width", width);
+                i.putExtra("height", height);
+                i.putExtra("uvX", uvX);
+                i.putExtra("uvY", uvY);
+                i.putExtra("uvWidth", uvWidth);
+                i.putExtra("uvHeight", uvHeight);
+                i.putExtra("fontSize", fontSize);
+                i.putExtra("fontColor", fontColor);
                 GlobalObject.getActivity().startActivity(i);
             }
         });

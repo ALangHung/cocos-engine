@@ -258,7 +258,17 @@ public class CocosEditBoxAbility extends AbilitySlice {
                         intent.getBooleanParam("isMultiline", false),
                         intent.getBooleanParam("confirmHold", true),
                         intent.getStringParam("confirmType"),
-                        intent.getStringParam("inputType"));
+                        intent.getStringParam("inputType"),
+                        intent.getIntParam("x"),
+                        intent.getIntParam("y"),
+                        intent.getIntParam("width"),
+                        intent.getIntParam("height"),
+                        intent.getFloatParam("uvX"),
+                        intent.getFloatParam("uvY"),
+                        intent.getFloatParam("uvWidth"),
+                        intent.getFloatParam("uvWeight"),
+                        intent.getIntParam("fontSize"),
+                        intent.getIntParam("fontColor"));
 
             }
         });

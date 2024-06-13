@@ -79,8 +79,23 @@ jsb.inputBox = {
      * @param {bool}        options.multiple
      * @param {bool}        options.confirmHold
      * @param {string}      options.confirmType
-     * @param {string}      options.inputType
-     *
+     * @param {int}      	options.originX
+     * @param {int}     	options.originY
+     * @param {int}      	options.width
+     * @param {int}      	options.height
+     * @param {float}      	options.uvX
+     * @param {float}     	options.uvY
+     * @param {float}     	options.uvWidth
+     * @param {float}     	options.uvHeight
+     * @param {int}     	options.underlineColor
+     * @param {float}     	options.fontSize
+     * @param {int}     	options.fontColor
+     * @param {bool}     	options.isBold
+     * @param {bool}     	options.isItalic
+     * @param {int}     	options.backColor
+     * @param {int}     	options.backgroundColor
+     * @param {int}     	options.textAlignment
+	 * 
      * Values of options.confirmType can be [done|next|search|go|send].
      * Values of options.inputType can be [text|email|number|phone|password].
      */
