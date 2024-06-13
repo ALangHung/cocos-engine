@@ -52,7 +52,7 @@ public:
         bool confirmHold = false;
         bool isMultiline = false;
         //NEW PROPERTIES
-        // uint32_t fontSize = 20;
+        ccstd::string fontPath = "";
         float fontSize = 20;
         uint32_t fontColor = 0x00000000;
         uint32_t backColor = 0x00000000; //font back color

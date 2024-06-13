@@ -88,6 +88,7 @@ jsb.inputBox = {
      * @param {float}     	options.uvWidth
      * @param {float}     	options.uvHeight
      * @param {int}     	options.underlineColor
+     * @param {string}     	options.fontPath
      * @param {float}     	options.fontSize
      * @param {int}     	options.fontColor
      * @param {bool}     	options.isBold

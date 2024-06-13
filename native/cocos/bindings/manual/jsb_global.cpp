@@ -926,6 +926,12 @@ static bool JSB_showInputBox(se::State &s) { // NOLINT
             }
         }
 
+        if (obj->getProperty("fontPath", &tmp)) {
+            SE_PRECONDITION2(tmp.isString(), false, "fontPath is invalid!");
+            if (!tmp.isUndefined()) {
+                showInfo.fontPath = tmp.toString();
+            }
+        }
         if (obj->getProperty("fontSize", &tmp)) {
             SE_PRECONDITION2(tmp.isNumber(), false, "fontSize is invalid!");
             if (!tmp.isUndefined()) {

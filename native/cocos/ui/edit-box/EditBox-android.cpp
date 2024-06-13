@@ -88,6 +88,7 @@ void EditBox::show(const cc::EditBox::ShowInfo &showInfo) {
                                     showInfo.uvY,
                                     showInfo.uvWidth,
                                     showInfo.uvHeight,
+                                    showInfo.fontPath,
                                     showInfo.fontSize,
                                     static_cast<int>(showInfo.fontColor));
     _isShown = true;

@@ -123,6 +123,11 @@
             const node = this._delegate.node;
             node.getWorldMatrix(worldMat);
             const fontSize = editLabel.fontSize / worldMat.m05;
+            let fontPath = "";
+            if (editLabel.font != null) {
+                let uuid = editLabel.font.uuid;
+                fontPath = "assets/main/native/" + uuid.substring(0, 2) + "/" + uuid + "/" + editLabel.font._native;
+            }
 
             jsb.inputBox.show({
                 defaultValue: delegate.string,
@@ -143,6 +148,7 @@
                 isItalic: editLabel.isItalic,
                 isUnderline: editLabel.isUnderline,
                 underlineColor: 0x00000000/* Black */,
+                fontPath: fontPath,
                 fontSize: /**float */fontSize,
                 fontColor: /**number */editLabel.color.toRGBValue(),
                 backColor: 0x00ffffff/*White*/,
