@@ -136,13 +136,7 @@ public class CocosEditBoxActivity extends Activity {
                 e.printStackTrace();
                 this.setTypeface(Typeface.DEFAULT);
             }
-            float screenWidth = getRootView().getWidth();
-            float screenHeight = getRootView().getHeight();
-            Log.i(TAG, "screenWidth: " + uvX*screenWidth);
-            Log.i(TAG, "screenHeight: " + uvY*screenHeight);
-            Log.i(TAG, "HeightuvY: " + uvY);
-            Log.i(TAG, "Height: " + screenHeight);
-            this.setTranslationX(uvX*screenWidth);
+            boxX = uvX;
             boxY = uvY;
             this.setText(defaultValue);
             if (this.getText().length() >= defaultValue.length()) {
@@ -277,8 +271,9 @@ public class CocosEditBoxActivity extends Activity {
                         }else {
                             myLayout.setTranslationY(screenHeight * (keyboardHeightRate - boxY));
                         }
+                        myLayout.setTranslationX(boxX * screenWidth);
                         if (!isSystemAdjustUIWhenPopKeyboard(heightDiff)) {
-                            getRootView().scrollTo((int) (boxX * screenWidth), heightDiff);
+                            getRootView().scrollTo(0, heightDiff);
                         }
                     } else {
                         getRootView().scrollTo(0, 0);
