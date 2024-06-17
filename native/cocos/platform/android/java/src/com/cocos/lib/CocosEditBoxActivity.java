@@ -59,6 +59,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class CocosEditBoxActivity extends Activity {
 
     public static final String TAG = "CocosEditBoxActivity";
@@ -129,13 +132,8 @@ public class CocosEditBoxActivity extends Activity {
             this.setTextColor(fontColor);
             this.setTextSize(fontSize);
             this.setGravity(textAlignment);
-            try {
-                Typeface typeface = Typeface.createFromAsset(getAssets(), fontPath);//"assets/font/PingFang-Heavy.ttf"
-                this.setTypeface(typeface);
-            } catch (Exception e) {
-                e.printStackTrace();
-                this.setTypeface(Typeface.DEFAULT);
-            }
+            Typeface typeface = TypefaceCache.getTypeface(getContext(), fontPath);
+            this.setTypeface(typeface);
             boxX = uvX;
             boxY = uvY;
             this.setText(defaultValue);
@@ -599,4 +597,24 @@ public class CocosEditBoxActivity extends Activity {
     private static native void onKeyboardInputNative(String text);
     private static native void onKeyboardCompleteNative(String text);
     private static native void onKeyboardConfirmNative(String text);
+}
+
+class TypefaceCache {
+    private static final String TAG = "TypefaceCache";
+    private static Map<String, Typeface> typefaceCache = new HashMap<>();
+
+    public static Typeface getTypeface(Context context, String fontPath) {
+        if (typefaceCache.containsKey(fontPath)) {
+            return typefaceCache.get(fontPath);
+        } else {
+            try {
+                Typeface typeface = Typeface.createFromAsset(context.getAssets(), fontPath);
+                typefaceCache.put(fontPath, typeface);
+                return typeface;
+            } catch (Exception e) {
+                Log.e(TAG, "Error loading font: " + fontPath, e);
+                return Typeface.DEFAULT;
+            }
+        }
+    }
 }
