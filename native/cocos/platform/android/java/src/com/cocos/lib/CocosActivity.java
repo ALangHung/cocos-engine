@@ -24,6 +24,10 @@
 
 package com.cocos.lib;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.media.AudioManager;
@@ -51,7 +55,17 @@ public class CocosActivity extends GameActivity {
     private CocosSensorHandler mSensorHandler;
     private List<CocosSurfaceView> mSurfaceViewArray;
     private FrameLayout mRootLayout;
-
+    private BroadcastReceiver dataChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if ("com.example.ACTION_DATA_CHANGED".equals(intent.getAction())) {
+                float keyboardHeightRate = intent.getFloatExtra("keyboardHeightRate",0);
+                Log.e("ththththth",String.valueOf(keyboardHeightRate));
+                // 处理数据变化
+                mRootLayout.setTranslationY(keyboardHeightRate);
+            }
+        }
+    };
 
 
     private native void onCreateNative();
@@ -84,6 +98,8 @@ public class CocosActivity extends GameActivity {
         Utils.hideVirtualButton();
 
         mSurfaceView.setOnTouchListener((v, event) -> processMotionEvent(event));
+        IntentFilter filter = new IntentFilter("com.example.ACTION_DATA_CHANGED");
+        registerReceiver(dataChangedReceiver, filter);
     }
 
     private void setImmersiveMode() {

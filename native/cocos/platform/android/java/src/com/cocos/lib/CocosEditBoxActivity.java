@@ -31,6 +31,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.StateListDrawable;
@@ -42,6 +43,7 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -73,6 +75,9 @@ public class CocosEditBoxActivity extends Activity {
     private int mEditTextID = 1;
     private int mButtonLayoutID = 2;
     private static float keyboardHeightRate = 0;
+    private float boxY = 0;
+    private float boxX = 0;
+    private RelativeLayout myLayout;
 
     /***************************************************************************************
      Inner class.
@@ -85,6 +90,8 @@ public class CocosEditBoxActivity extends Activity {
 
         private int mScreenHeight;
         private boolean mCheckKeyboardShowNormally = false;
+
+
 
         public  Cocos2dxEditText(Activity context){
             super(context);
@@ -121,6 +128,21 @@ public class CocosEditBoxActivity extends Activity {
             Log.i(TAG, "show fontColor: " + fontColor);
             this.setTextColor(fontColor);
             this.setTextSize(fontSize);
+            try {
+                Typeface typeface = Typeface.createFromAsset(getAssets(), fontPath);//"assets/font/PingFang-Heavy.ttf"
+                this.setTypeface(typeface);
+            } catch (Exception e) {
+                e.printStackTrace();
+                this.setTypeface(Typeface.DEFAULT);
+            }
+            float screenWidth = getRootView().getWidth();
+            float screenHeight = getRootView().getHeight();
+            Log.i(TAG, "screenWidth: " + uvX*screenWidth);
+            Log.i(TAG, "screenHeight: " + uvY*screenHeight);
+            Log.i(TAG, "HeightuvY: " + uvY);
+            Log.i(TAG, "Height: " + screenHeight);
+            this.setTranslationX(uvX*screenWidth);
+            boxY = uvY;
             this.setText(defaultValue);
             if (this.getText().length() >= defaultValue.length()) {
                 this.setSelection(defaultValue.length());
@@ -237,16 +259,29 @@ public class CocosEditBoxActivity extends Activity {
                         if (!keyboardVisible) {
                             keyboardVisible = true;
                         }
-                        Log.i(TAG, "getRootView().getHeight(): " + getRootView().getHeight());
+                        DisplayMetrics displayMetrics = new DisplayMetrics();
+                        getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+                        int screenWidth = displayMetrics.widthPixels;
+                        int screenHeight = displayMetrics.heightPixels;
+                        Log.i(TAG, "getRootView().getHeight(): " + screenHeight);
+                        Log.i(TAG, "getRootView().getHeight(): " + screenWidth);
                         Log.i(TAG, "heightDiff: " + heightDiff);
 
-                        keyboardHeightRate = (float) heightDiff / getRootView().getHeight();
-                        onKeyboardHeightRateChange(keyboardHeightRate);
+                        keyboardHeightRate = (float) heightDiff / screenHeight;
+
+                        Log.i(TAG, "heightDiffDiff: " + screenHeight*(boxY-keyboardHeightRate));
+                        if (boxY < keyboardHeightRate) {
+                            //佈局位置適配邏輯,y軸在cocos頁面位移，x軸在本頁面位移
+                            onKeyboardHeightRateChange(screenHeight * (boxY - keyboardHeightRate));
+                        }else {
+                            myLayout.setTranslationY(screenHeight * (keyboardHeightRate - boxY));
+                        }
                         if (!isSystemAdjustUIWhenPopKeyboard(heightDiff)) {
-                            getRootView().scrollTo(0, heightDiff);
+                            getRootView().scrollTo((int) (boxX * screenWidth), heightDiff);
                         }
                     } else {
                         getRootView().scrollTo(0, 0);
+                        onKeyboardHeightRateChange(0);
                         if (mCheckKeyboardShowNormally && !keyboardVisible) {
                             Toast.makeText(CocosEditBoxActivity.this, R.string.tip_disable_safe_input_type, Toast.LENGTH_SHORT).show();
                         }
@@ -260,9 +295,9 @@ public class CocosEditBoxActivity extends Activity {
         }
     }
 
-    private void onKeyboardHeightRateChange(float keyboardHeightRate) {
+    private void onKeyboardHeightRateChange(float keyboardHeight) {
         Intent intent = new Intent("com.example.ACTION_DATA_CHANGED");
-        intent.putExtra("keyboardHeightRate", keyboardHeightRate);
+        intent.putExtra("keyboardHeightRate", keyboardHeight);
         sendBroadcast(intent);
     }
 
@@ -341,8 +376,8 @@ public class CocosEditBoxActivity extends Activity {
      Private functions.
      **************************************************************************************/
     private void addItems(RelativeLayout layout) {
-        RelativeLayout myLayout = new RelativeLayout(this);
-        myLayout.setBackgroundColor(Color.argb(255, 244, 244, 244));
+        myLayout = new RelativeLayout(this);
+        myLayout.setBackgroundColor(Color.argb(0, 244, 244, 244));
 //        myLayout.setVisibility(View.INVISIBLE);//--//
 
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -361,10 +396,10 @@ public class CocosEditBoxActivity extends Activity {
     }
     private void addEditText(RelativeLayout layout) {
         mEditText = new Cocos2dxEditText(this);
-        mEditText.setVisibility(View.INVISIBLE);
+        mEditText.setVisibility(View.VISIBLE);
         mEditText.setGravity(Gravity.CENTER_VERTICAL);
 //        mEditText.setBackground(getRoundRectShape(18, Color.WHITE, Color.WHITE));
-        mEditText.setBackground(getRoundRectShape(18, Color.YELLOW, Color.YELLOW));
+        mEditText.setBackground(getRoundRectShape(18, Color.TRANSPARENT, Color.TRANSPARENT));
         mEditText.setId(mEditTextID);
         int bottomPadding = dpToPixel(4);
         int leftPadding = dpToPixel(3);
@@ -384,9 +419,9 @@ public class CocosEditBoxActivity extends Activity {
     private void addButton(RelativeLayout layout) {
         mButton = new Button(this);
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        mButton.setTextColor(Color.WHITE);
+        mButton.setTextColor(Color.TRANSPARENT);
         mButton.setTextSize(16);
-        mButton.setBackground(getRoundRectShape(18, DARK_GREEN, DARK_GREEN_PRESS));
+        mButton.setBackground(getRoundRectShape(18, Color.TRANSPARENT, Color.TRANSPARENT));
         int paddingLeft = dpToPixel(5);
         mButton.setPadding(paddingLeft,0,paddingLeft,0);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
