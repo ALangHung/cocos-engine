@@ -183,7 +183,7 @@ class ReusableInvoker extends LifeCycleInvoker {
             if (i < 0) {
                 array.splice(~i, 0, comp);
             } else if (DEV) {
-                error('component already added');
+                error('component ' + comp.name + ' already added');
             }
         }
     }

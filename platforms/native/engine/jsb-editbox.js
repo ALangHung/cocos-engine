@@ -120,9 +120,23 @@
             }
 
             const editLabel = delegate.textLabel;
-            const node = this._delegate.node;
-            node.getWorldMatrix(worldMat);
-            const fontSize = editLabel.fontSize / worldMat.m05;
+            let viewScaleY = cc.view._scaleY;
+            const fontSize = editLabel.fontSize * viewScaleY;
+            // const node = this._delegate.node;
+            // node.getWorldMatrix(worldMat);
+            // console.log("[beginEditing] worldMat : " + worldMat);
+            // let viewScaleY = cc.view._scaleY;
+            // console.log("[beginEditing] viewScaleY: " + viewScaleY);
+            // const dpr = jsb.device.getDevicePixelRatio() || 1;
+            // console.log("[beginEditing] dpr: " + dpr);
+            // viewScaleY /= dpr;
+            // console.log("[beginEditing] worldMat.m05 : " + worldMat.m05);
+            // console.log("[beginEditing] viewScaleY2 : " + viewScaleY);
+            // const finaleScaleY = viewScaleY / worldMat.m05;
+            // console.log("[beginEditing] finaleScaleY : " + finaleScaleY);
+            // const fontSize = editLabel.fontSize * finaleScaleY;
+            // console.log("[beginEditing] editLabel.fontSize : " + editLabel.fontSize);
+            // console.log("[beginEditing] fontSize : " + fontSize);
             let fontPath = "";
             if (editLabel.font != null) {
                 let uuid = editLabel.font.uuid;

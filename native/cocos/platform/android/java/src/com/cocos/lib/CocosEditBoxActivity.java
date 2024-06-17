@@ -122,12 +122,13 @@ public class CocosEditBoxActivity extends Activity {
          Public functions.
          **************************************************************************************/
 
-        public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor) {
+        public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textAlignment) {
             mIsMultiLine = isMultiline;
             this.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength) });
             Log.i(TAG, "show fontColor: " + fontColor);
             this.setTextColor(fontColor);
             this.setTextSize(fontSize);
+            this.setGravity(textAlignment);
             try {
                 Typeface typeface = Typeface.createFromAsset(getAssets(), fontPath);//"assets/font/PingFang-Heavy.ttf"
                 this.setTypeface(typeface);
@@ -346,6 +347,7 @@ public class CocosEditBoxActivity extends Activity {
                 0,
                 "",
                 20,
+                0,
                 0);
         } else {
             show(extras.getString("defaultValue"),
@@ -364,7 +366,8 @@ public class CocosEditBoxActivity extends Activity {
                 extras.getFloat("uvHeight"),
                 extras.getString("fontPath"),
                 extras.getFloat("fontSize"),
-                extras.getInt("fontColor"));
+                extras.getInt("fontColor"),
+                extras.getInt("textAlignment"));
         }
     }
 
@@ -467,7 +470,7 @@ public class CocosEditBoxActivity extends Activity {
         finish();
     }
 
-    public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor) {
+    public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textAlignment) {
         Log.i(TAG, "defaultValue: " + defaultValue);
         Log.i(TAG, "maxLength: " + maxLength);
         Log.i(TAG, "isMultiline: " + isMultiline);
@@ -485,6 +488,7 @@ public class CocosEditBoxActivity extends Activity {
         Log.i(TAG, "fontPath: " + fontPath);
         Log.i(TAG, "fontSize: " + fontSize);
         Log.i(TAG, "fontColor: " + fontColor);
+        Log.i(TAG, "textAlignment: " + textAlignment);
 
         // ABGR to ARGB conversion
         int alpha = 0xFF;
@@ -501,7 +505,7 @@ public class CocosEditBoxActivity extends Activity {
         Log.i(TAG, "fontColor colorInt: " + colorInt);
 
         mConfirmHold = confirmHold;
-        mEditText.show(defaultValue, maxLength, isMultiline, confirmHold, confirmType, inputType, x, y, width, height, uvX, uvY, uvWidth, uvHeight, fontPath, fontSize, colorInt);
+        mEditText.show(defaultValue, maxLength, isMultiline, confirmHold, confirmType, inputType, x, y, width, height, uvX, uvY, uvWidth, uvHeight, fontPath, fontSize, colorInt, textAlignment);
         mButton.setText(mButtonTitle);
         if (TextUtils.isEmpty(mButtonTitle)) {
             mButton.setVisibility(View.INVISIBLE);
@@ -528,7 +532,7 @@ public class CocosEditBoxActivity extends Activity {
      Functions invoked by CPP.
      **************************************************************************************/
 
-    private static void showNative(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor) {
+    private static void showNative(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textAlignment) {
         GlobalObject.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -550,6 +554,7 @@ public class CocosEditBoxActivity extends Activity {
                 i.putExtra("fontPath", fontPath);
                 i.putExtra("fontSize", fontSize);
                 i.putExtra("fontColor", fontColor);
+                i.putExtra("textAlignment", textAlignment);
                 GlobalObject.getActivity().startActivity(i);
             }
         });
