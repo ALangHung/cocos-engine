@@ -120,6 +120,8 @@
             }
 
             const editLabel = delegate.textLabel;
+            // let viewScaleY = cc.view._scaleY;
+            // const fontSize = editLabel.fontSize * viewScaleY;
             let viewScaleY = cc.view._scaleY;
             const fontSize = editLabel.fontSize * viewScaleY;
             // const node = this._delegate.node;
