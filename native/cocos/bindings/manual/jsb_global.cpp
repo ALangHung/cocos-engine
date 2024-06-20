@@ -980,10 +980,16 @@ static bool JSB_showInputBox(se::State &s) { // NOLINT
                 showInfo.backgroundColor = tmp.toUint32();
             }
         }
-        if (obj->getProperty("textAlignment", &tmp)) {
-            SE_PRECONDITION2(tmp.isNumber(), false, "textAlignment is invalid!");
+        if (obj->getProperty("textHorizontalAlignment", &tmp)) {
+            SE_PRECONDITION2(tmp.isNumber(), false, "textHorizontalAlignment is invalid!");
             if (!tmp.isUndefined()) {
-                showInfo.textAlignment = tmp.toUint32();
+                showInfo.textHorizontalAlignment = tmp.toUint32();
+            }
+        }
+        if (obj->getProperty("textVerticalAlignment", &tmp)) {
+            SE_PRECONDITION2(tmp.isNumber(), false, "textVerticalAlignment is invalid!");
+            if (!tmp.isUndefined()) {
+                showInfo.textVerticalAlignment = tmp.toUint32();
             }
         }
         EditBox::show(showInfo);

@@ -31,10 +31,15 @@ namespace cc {
 
 class EditBox {
 public:
-    enum TextAlignment {
+    enum TextHorizontalAlignment {
         LEFT,
-        CENTER,
+        HORIZONTAL_CENTER,
         RIGHT
+    };
+    enum TextVerticalAlignment {
+        TOP,
+        VERTICAL_CENTER,
+        BOTTOM
     };
     struct ShowInfo {
         ccstd::string defaultValue;
@@ -61,7 +66,8 @@ public:
         bool isItalic = false;
         bool isUnderline = false;
         uint32_t underlineColor = 0x00000000;
-        uint32_t textAlignment = LEFT; //By default, override with left, center or right
+        uint32_t textHorizontalAlignment = LEFT; //By default, override with left, center or right
+        uint32_t textVerticalAlignment = TOP; //By default, override with top, center or bottom
     };
 
     static void show(const ShowInfo &showInfo);

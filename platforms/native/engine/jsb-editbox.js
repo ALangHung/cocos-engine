@@ -120,10 +120,17 @@
             }
 
             const editLabel = delegate.textLabel;
-            // let viewScaleY = cc.view._scaleY;
-            // const fontSize = editLabel.fontSize * viewScaleY;
             let viewScaleY = cc.view._scaleY;
-            const fontSize = editLabel.fontSize * viewScaleY;
+            console.log("[beginEditing] viewScaleY : " + cc.view._scaleY);
+            delegate.node.getWorldMatrix(worldMat);
+            console.log("[beginEditing] worldMat.m05 : " + worldMat.m05);
+            const fontSize = editLabel.fontSize * viewScaleY * worldMat.m05;
+
+            // const node = this._delegate.node;
+            // node.getWorldMatrix(worldMat);
+            // console.log("[beginEditing] worldMat : " + worldMat);
+            // const fontSize = editLabel.fontSize / worldMat.m05;
+
             // const node = this._delegate.node;
             // node.getWorldMatrix(worldMat);
             // console.log("[beginEditing] worldMat : " + worldMat);
@@ -169,7 +176,8 @@
                 fontColor: /**number */editLabel.color.toRGBValue(),
                 backColor: 0x00ffffff/*White*/,
                 backgroundColor: delegate.placeholderLabel.color.toRGBValue(),
-                textAlignment: /*left = 0, center = 1, right = 2*/editLabel.horizontalAlign,
+                textHorizontalAlignment: /*left = 0, center = 1, right = 2*/editLabel.horizontalAlign,
+                textVerticalAlignment: /*top = 0, center = 1, bottom = 2*/editLabel.verticalAlign,
             });
             this._editing = true;
             delegate._editBoxEditingDidBegan();
@@ -305,15 +313,16 @@
                 console.log("uvWidth: " + uvWidth);
                 console.log("uvHeight: " + uvHeight);
 
-                originX = worldMat.m12 - width * (1 - anchorPoint.x);
-                originY = worldMat.m13 - height * (1 - anchorPoint.y);
+                originX = worldMat.m12 - width * anchorPoint.x;
+                originY = worldMat.m13 - height * anchorPoint.y;
                 console.log("originX: " + originX);
                 console.log("originY: " + originY);
+
+                uvX = originX / visibleSize.width;
+                uvY = originY / visibleSize.height;
+                console.log("uvX: " + uvX);
+                console.log("uvY: " + uvY);
             }
-            uvX = originX / visibleSize.width;
-            uvY = originY / visibleSize.height;
-            console.log("uvX: " + uvX);
-            console.log("uvY: " + uvY);
             return {
                 uvX: uvX,
                 uvY: uvY,

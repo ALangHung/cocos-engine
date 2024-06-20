@@ -43,6 +43,7 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.TypedValue;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -81,6 +82,7 @@ public class CocosEditBoxActivity extends Activity {
     private float boxY = 0;
     private float boxX = 0;
     private RelativeLayout myLayout;
+    public boolean perpareToOpenKeyboard = false;
 
     /***************************************************************************************
      Inner class.
@@ -89,7 +91,6 @@ public class CocosEditBoxActivity extends Activity {
         private final String TAG = "Cocos2dxEditBox";
         private boolean mIsMultiLine = false;
         private TextWatcher mTextWatcher = null;
-        private boolean keyboardVisible = false;
 
         private int mScreenHeight;
         private boolean mCheckKeyboardShowNormally = false;
@@ -125,15 +126,41 @@ public class CocosEditBoxActivity extends Activity {
          Public functions.
          **************************************************************************************/
 
-        public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textAlignment) {
+        public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textHorizontalAlignment, int textVerticalAlignment) {
             mIsMultiLine = isMultiline;
-            this.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength) });
-            Log.i(TAG, "show fontColor: " + fontColor);
-            this.setTextColor(fontColor);
-            this.setTextSize(fontSize);
-            this.setGravity(textAlignment);
+
             Typeface typeface = TypefaceCache.getTypeface(getContext(), fontPath);
             this.setTypeface(typeface);
+
+            this.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength) });
+            this.setTextColor(fontColor);
+            this.setTextSize(TypedValue.COMPLEX_UNIT_PX, fontSize);
+
+            int gravity = 0;
+            switch (textHorizontalAlignment) {
+                case 0:
+                    gravity = Gravity.LEFT;
+                    break;
+                case 1:
+                    gravity = Gravity.CENTER_HORIZONTAL;
+                    break;
+                case 2:
+                    gravity = Gravity.RIGHT;
+                    break;
+            }
+            switch (textVerticalAlignment) {
+                case 0:
+                    gravity |= Gravity.TOP;
+                    break;
+                case 1:
+                    gravity |= Gravity.CENTER_VERTICAL;
+                    break;
+                case 2:
+                    gravity |= Gravity.BOTTOM;
+                    break;
+            }
+            this.setGravity(gravity);
+
             boxX = uvX;
             boxY = uvY;
             this.setText(defaultValue);
@@ -248,39 +275,43 @@ public class CocosEditBoxActivity extends Activity {
                     Rect r = new Rect();
                     getWindowVisibleDisplayFrame(r);
                     int heightDiff = getRootView().getHeight() - (r.bottom - r.top);
+                    Log.i(TAG, "heightDiff: " + heightDiff);
+                    Log.i(TAG, "mScreenHeight: " + mScreenHeight);
                     if (heightDiff > mScreenHeight/4) {
-                        if (!keyboardVisible) {
-                            keyboardVisible = true;
-                        }
-                        DisplayMetrics displayMetrics = new DisplayMetrics();
-                        getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
-                        int screenWidth = displayMetrics.widthPixels;
-                        int screenHeight = displayMetrics.heightPixels;
-                        Log.i(TAG, "getRootView().getHeight(): " + screenHeight);
-                        Log.i(TAG, "getRootView().getHeight(): " + screenWidth);
-                        Log.i(TAG, "heightDiff: " + heightDiff);
+                        Log.i(TAG, "onGlobalLayout true");
 
-                        keyboardHeightRate = (float) heightDiff / screenHeight;
+                        if (CocosEditBoxActivity.this.perpareToOpenKeyboard) {
+                            DisplayMetrics displayMetrics = new DisplayMetrics();
+                            getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+                            int screenWidth = displayMetrics.widthPixels;
+                            int screenHeight = displayMetrics.heightPixels;
+                            Log.i(TAG, "screenWidth: " + screenWidth);
+                            Log.i(TAG, "screenHeight: " + screenHeight);
+                            Log.i(TAG, "heightDiff: " + heightDiff);
 
-                        Log.i(TAG, "heightDiffDiff: " + screenHeight*(boxY-keyboardHeightRate));
-                        if (boxY < keyboardHeightRate) {
-                            //佈局位置適配邏輯,y軸在cocos頁面位移，x軸在本頁面位移
-                            onKeyboardHeightRateChange(screenHeight * (boxY - keyboardHeightRate));
-                        }else {
-                            myLayout.setTranslationY(screenHeight * (keyboardHeightRate - boxY));
+                            keyboardHeightRate = (float) heightDiff / screenHeight;
+
+                            Log.i(TAG, "heightDiffDiff: " + screenHeight * (boxY - keyboardHeightRate));
+                            if (boxY < keyboardHeightRate) {
+                                onKeyboardHeightRateChange(screenHeight * (boxY - keyboardHeightRate));
+                            }else {
+                                myLayout.setTranslationY(screenHeight * (keyboardHeightRate - boxY));
+                            }
+                            myLayout.setTranslationX(boxX * screenWidth);
                         }
-                        myLayout.setTranslationX(boxX * screenWidth);
+
                         if (!isSystemAdjustUIWhenPopKeyboard(heightDiff)) {
                             getRootView().scrollTo(0, heightDiff);
                         }
                     } else {
+                        Log.i(TAG, "onGlobalLayout false");
+
                         getRootView().scrollTo(0, 0);
                         onKeyboardHeightRateChange(0);
-                        if (mCheckKeyboardShowNormally && !keyboardVisible) {
+                        if (mCheckKeyboardShowNormally && CocosEditBoxActivity.this.perpareToOpenKeyboard) {
                             Toast.makeText(CocosEditBoxActivity.this, R.string.tip_disable_safe_input_type, Toast.LENGTH_SHORT).show();
                         }
-                        if (keyboardVisible) {
-                            keyboardVisible = false;
+                        if (!CocosEditBoxActivity.this.perpareToOpenKeyboard) {
                             CocosEditBoxActivity.this.hide();
                         }
                     }
@@ -290,6 +321,7 @@ public class CocosEditBoxActivity extends Activity {
     }
 
     private void onKeyboardHeightRateChange(float keyboardHeight) {
+        Log.i(TAG, "onKeyboardHeightRateChange keyboardHeight: " + keyboardHeight);
         Intent intent = new Intent("com.example.ACTION_DATA_CHANGED");
         intent.putExtra("keyboardHeightRate", keyboardHeight);
         sendBroadcast(intent);
@@ -341,6 +373,7 @@ public class CocosEditBoxActivity extends Activity {
                 "",
                 20,
                 0,
+                0,
                 0);
         } else {
             show(extras.getString("defaultValue"),
@@ -360,7 +393,8 @@ public class CocosEditBoxActivity extends Activity {
                 extras.getString("fontPath"),
                 extras.getFloat("fontSize"),
                 extras.getInt("fontColor"),
-                extras.getInt("textAlignment"));
+                extras.getInt("textHorizontalAlignment"),
+                extras.getInt("textVerticalAlignment"));
         }
     }
 
@@ -374,7 +408,6 @@ public class CocosEditBoxActivity extends Activity {
     private void addItems(RelativeLayout layout) {
         myLayout = new RelativeLayout(this);
         myLayout.setBackgroundColor(Color.argb(0, 244, 244, 244));
-//        myLayout.setVisibility(View.INVISIBLE);//--//
 
         RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -396,19 +429,38 @@ public class CocosEditBoxActivity extends Activity {
         mEditText.setGravity(Gravity.CENTER_VERTICAL);
 //        mEditText.setBackground(getRoundRectShape(18, Color.WHITE, Color.WHITE));
         mEditText.setBackground(getRoundRectShape(18, Color.TRANSPARENT, Color.TRANSPARENT));
+//        mEditText.setBackground(getRoundRectShape(0, Color.YELLOW, Color.YELLOW));
         mEditText.setId(mEditTextID);
-        int bottomPadding = dpToPixel(4);
-        int leftPadding = dpToPixel(3);
-        mEditText.setPadding(leftPadding,bottomPadding,leftPadding,bottomPadding);
+//        int bottomPadding = dpToPixel(4);
+//        int leftPadding = dpToPixel(3);
+//        mEditText.setPadding(leftPadding,bottomPadding,leftPadding,bottomPadding);
+        mEditText.setPadding(0, 0, 0, 0);
 
-        RelativeLayout.LayoutParams editParams = new RelativeLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-
+        int viewWidth = ViewGroup.LayoutParams.MATCH_PARENT;
+        int viewHeight = ViewGroup.LayoutParams.WRAP_CONTENT;
+        Intent intent = getIntent();
+        Bundle extras = null;
+        if (null != intent) {
+            extras = intent.getExtras();
+        }
+        if (extras != null) {
+            DisplayMetrics displayMetrics = new DisplayMetrics();
+            getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+            int screenWidth = displayMetrics.widthPixels;
+            int screenHeight = displayMetrics.heightPixels;
+            float uvWidth = extras.getFloat("uvWidth");
+            float uvHeight = extras.getFloat("uvHeight");
+            viewWidth = (int) (screenWidth * uvWidth);
+            viewHeight = (int) (screenHeight * uvHeight);
+        }
+        RelativeLayout.LayoutParams editParams = new RelativeLayout.LayoutParams(viewWidth, viewHeight);
         editParams.addRule(RelativeLayout.CENTER_VERTICAL);
-        editParams.addRule(RelativeLayout.LEFT_OF, mButtonLayoutID);
-        int bottomMargin = dpToPixel(5);
-        int leftMargin = dpToPixel(4);
-        editParams.setMargins(leftMargin, bottomMargin, bottomMargin, bottomMargin);
+//        editParams.addRule(RelativeLayout.LEFT_OF, mButtonLayoutID);
+        editParams.addRule(RelativeLayout.ALIGN_LEFT);
+//        int bottomMargin = dpToPixel(5);
+//        int leftMargin = dpToPixel(4);
+//        editParams.setMargins(leftMargin, bottomMargin, bottomMargin, bottomMargin);
+        editParams.setMargins(0, 0, 0, 0);
         layout.addView(mEditText, editParams);
     }
 
@@ -463,7 +515,7 @@ public class CocosEditBoxActivity extends Activity {
         finish();
     }
 
-    public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textAlignment) {
+    public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textHorizontalAlignment, int textVerticalAlignment) {
         Log.i(TAG, "defaultValue: " + defaultValue);
         Log.i(TAG, "maxLength: " + maxLength);
         Log.i(TAG, "isMultiline: " + isMultiline);
@@ -481,7 +533,8 @@ public class CocosEditBoxActivity extends Activity {
         Log.i(TAG, "fontPath: " + fontPath);
         Log.i(TAG, "fontSize: " + fontSize);
         Log.i(TAG, "fontColor: " + fontColor);
-        Log.i(TAG, "textAlignment: " + textAlignment);
+        Log.i(TAG, "textHorizontalAlignment: " + textHorizontalAlignment);
+        Log.i(TAG, "textVerticalAlignment: " + textVerticalAlignment);
 
         // ABGR to ARGB conversion
         int alpha = 0xFF;
@@ -498,7 +551,7 @@ public class CocosEditBoxActivity extends Activity {
         Log.i(TAG, "fontColor colorInt: " + colorInt);
 
         mConfirmHold = confirmHold;
-        mEditText.show(defaultValue, maxLength, isMultiline, confirmHold, confirmType, inputType, x, y, width, height, uvX, uvY, uvWidth, uvHeight, fontPath, fontSize, colorInt, textAlignment);
+        mEditText.show(defaultValue, maxLength, isMultiline, confirmHold, confirmType, inputType, x, y, width, height, uvX, uvY, uvWidth, uvHeight, fontPath, fontSize, colorInt, textHorizontalAlignment, textVerticalAlignment);
         mButton.setText(mButtonTitle);
         if (TextUtils.isEmpty(mButtonTitle)) {
             mButton.setVisibility(View.INVISIBLE);
@@ -510,6 +563,8 @@ public class CocosEditBoxActivity extends Activity {
     }
 
     private void closeKeyboard() {
+        Log.i(TAG, "closeKeyboard");
+        this.perpareToOpenKeyboard = false;
         InputMethodManager imm = (InputMethodManager) getSystemService(this.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(mEditText.getWindowToken(), 0);
 
@@ -517,6 +572,8 @@ public class CocosEditBoxActivity extends Activity {
     }
 
     private void openKeyboard() {
+        Log.i(TAG, "openKeyboard");
+        this.perpareToOpenKeyboard = true;
         InputMethodManager imm = (InputMethodManager) getSystemService(this.INPUT_METHOD_SERVICE);
         imm.showSoftInput(mEditText, InputMethodManager.SHOW_IMPLICIT);
     }
@@ -525,7 +582,7 @@ public class CocosEditBoxActivity extends Activity {
      Functions invoked by CPP.
      **************************************************************************************/
 
-    private static void showNative(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textAlignment) {
+    private static void showNative(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textHorizontalAlignment, int textVerticalAlignment) {
         GlobalObject.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -547,7 +604,8 @@ public class CocosEditBoxActivity extends Activity {
                 i.putExtra("fontPath", fontPath);
                 i.putExtra("fontSize", fontSize);
                 i.putExtra("fontColor", fontColor);
-                i.putExtra("textAlignment", textAlignment);
+                i.putExtra("textHorizontalAlignment", textHorizontalAlignment);
+                i.putExtra("textVerticalAlignment", textVerticalAlignment);
                 GlobalObject.getActivity().startActivity(i);
             }
         });
