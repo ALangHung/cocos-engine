@@ -95,7 +95,8 @@ jsb.inputBox = {
      * @param {bool}     	options.isItalic
      * @param {int}     	options.backColor
      * @param {int}     	options.backgroundColor
-     * @param {int}     	options.textAlignment
+     * @param {int}     	options.textHorizontalAlignment
+     * @param {int}     	options.textVerticalAlignment
 	 * 
      * Values of options.confirmType can be [done|next|search|go|send].
      * Values of options.inputType can be [text|email|number|phone|password].
