@@ -82,7 +82,7 @@ public class CocosEditBoxActivity extends Activity {
     private float boxY = 0;
     private float boxX = 0;
     private RelativeLayout myLayout;
-    public boolean perpareToOpenKeyboard = false;
+    public boolean prepareToOpenKeyboard = false;
 
     /***************************************************************************************
      Inner class.
@@ -129,8 +129,10 @@ public class CocosEditBoxActivity extends Activity {
         public void show(String defaultValue, int maxLength, boolean isMultiline, boolean confirmHold, String confirmType, String inputType, int x, int y, int width, int height, float uvX, float uvY, float uvWidth, float uvHeight, String fontPath, float fontSize, int fontColor, int textHorizontalAlignment, int textVerticalAlignment) {
             mIsMultiLine = isMultiline;
 
-            Typeface typeface = TypefaceCache.getTypeface(getContext(), fontPath);
-            this.setTypeface(typeface);
+            if (!fontPath.equals("")) {
+                Typeface typeface = TypefaceCache.getTypeface(getContext(), fontPath);
+                this.setTypeface(typeface);
+            }
 
             this.setFilters(new InputFilter[]{new InputFilter.LengthFilter(maxLength) });
             this.setTextColor(fontColor);
@@ -280,7 +282,7 @@ public class CocosEditBoxActivity extends Activity {
                     if (heightDiff > mScreenHeight/4) {
                         Log.i(TAG, "onGlobalLayout true");
 
-                        if (CocosEditBoxActivity.this.perpareToOpenKeyboard) {
+                        if (CocosEditBoxActivity.this.prepareToOpenKeyboard) {
                             DisplayMetrics displayMetrics = new DisplayMetrics();
                             getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
                             int screenWidth = displayMetrics.widthPixels;
@@ -308,10 +310,10 @@ public class CocosEditBoxActivity extends Activity {
 
                         getRootView().scrollTo(0, 0);
                         onKeyboardHeightRateChange(0);
-                        if (mCheckKeyboardShowNormally && CocosEditBoxActivity.this.perpareToOpenKeyboard) {
+                        if (mCheckKeyboardShowNormally && CocosEditBoxActivity.this.prepareToOpenKeyboard) {
                             Toast.makeText(CocosEditBoxActivity.this, R.string.tip_disable_safe_input_type, Toast.LENGTH_SHORT).show();
                         }
-                        if (!CocosEditBoxActivity.this.perpareToOpenKeyboard) {
+                        if (!CocosEditBoxActivity.this.prepareToOpenKeyboard) {
                             CocosEditBoxActivity.this.hide();
                         }
                     }
@@ -564,7 +566,7 @@ public class CocosEditBoxActivity extends Activity {
 
     private void closeKeyboard() {
         Log.i(TAG, "closeKeyboard");
-        this.perpareToOpenKeyboard = false;
+        this.prepareToOpenKeyboard = false;
         InputMethodManager imm = (InputMethodManager) getSystemService(this.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(mEditText.getWindowToken(), 0);
 
@@ -573,7 +575,7 @@ public class CocosEditBoxActivity extends Activity {
 
     private void openKeyboard() {
         Log.i(TAG, "openKeyboard");
-        this.perpareToOpenKeyboard = true;
+        this.prepareToOpenKeyboard = true;
         InputMethodManager imm = (InputMethodManager) getSystemService(this.INPUT_METHOD_SERVICE);
         imm.showSoftInput(mEditText, InputMethodManager.SHOW_IMPLICIT);
     }

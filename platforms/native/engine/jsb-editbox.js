@@ -118,6 +118,9 @@
             if (!cc.sys.isMobile) {
                 delegate._hideLabels();
             }
+            else {
+                delegate._showNativeKeyboard();
+            }
 
             const editLabel = delegate.textLabel;
             let viewScaleY = cc.view._scaleY;
@@ -187,6 +190,9 @@
             this._editing = false;
             if (!cc.sys.isMobile) {
                 this._delegate._showLabels();
+            }
+            else {
+                this._delegate._hideNativeKeyboard();
             }
             jsb.inputBox.offConfirm();
             jsb.inputBox.offInput();

@@ -406,6 +406,7 @@ export class EditBox extends Component {
     @serializable
     protected  _maxLength = 20;
 
+    private _isShowNativeKeyboard = false;
     private _isLabelVisible = false;
 
     public __preload (): void {
@@ -547,6 +548,16 @@ export class EditBox extends Component {
         }
     }
 
+    public _showNativeKeyboard(): void {
+        this._isShowNativeKeyboard = true;
+        this._updateLabels();
+    }
+
+    public _hideNativeKeyboard(): void {
+        this._isShowNativeKeyboard = false;
+        this._updateLabels();
+    }
+
     protected _onTouchBegan (event: EventTouch): void {
         event.propagationStopped = true;
     }
@@ -566,6 +577,7 @@ export class EditBox extends Component {
         this._updatePlaceholderLabel();
         this._updateTextLabel();
         this._isLabelVisible = true;
+        this._isShowNativeKeyboard = false;
         this.node.on(NodeEventType.SIZE_CHANGED, this._resizeChildNodes, this);
 
         const impl = this._impl = new EditBox._EditBoxImpl();
@@ -662,11 +674,21 @@ export class EditBox extends Component {
     protected _updateLabels (): void {
         if (this._isLabelVisible) {
             const content = this._string;
-            if (this._textLabel) {
-                this._textLabel.node.active = (content !== '');
+            if (this._isShowNativeKeyboard) {
+                if (this._textLabel) {
+                    this._textLabel.node.active = false;
+                }
+                if (this._placeholderLabel) {
+                    this._placeholderLabel.node.active = (content === '');
+                }
             }
-            if (this._placeholderLabel) {
-                this._placeholderLabel.node.active = (content === '');
+            else {
+                if (this._textLabel) {
+                    this._textLabel.node.active = (content !== '');
+                }
+                if (this._placeholderLabel) {
+                    this._placeholderLabel.node.active = (content === '');
+                }
             }
         }
     }
