@@ -55,7 +55,7 @@
 #include "cocos/bindings/manual/jsb_global.h"
 #include "engine/EngineEvents.h"
 #import <UIKit/UIKit.h>
-
+#import <CoreText/CoreText.h>
 #define ITEM_MARGIN_WIDTH               10
 #define ITEM_MARGIN_HEIGHT              10
 #define TEXT_LINE_HEIGHT                40
@@ -63,7 +63,7 @@
 #define BUTTON_HEIGHT                   (TEXT_LINE_HEIGHT - ITEM_MARGIN_HEIGHT)
 #define BUTTON_WIDTH                    60
 //TODO: change the proccedure of showing inputbox, possibly become a property
-const bool INPUTBOX_HIDDEN = true; // Toggle if Inputbox is visible
+const bool INPUTBOX_HIDDEN = false; // Toggle if Inputbox is visible
 /*************************************************************************
  Inner class declarations.
  ************************************************************************/
@@ -434,7 +434,7 @@ static EditboxManager *instance = nil;
                           initWithFrame:CGRectMake(0,
                                                    0,
                                                    safeView.size.width,
-                                                   0)];
+                                                   0)];//Andy fix :ToolBar高度设置为0
     [toolbar setBackgroundColor:[UIColor darkGrayColor]];
     
     UITextField* textField = [[UITextField alloc] init];
@@ -446,6 +446,8 @@ static EditboxManager *instance = nil;
     textField.delegate = delegate;
     inputbox.inputDelegate = delegate;
     [textField addTarget:delegate action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
+//    Andy fix:设置目标输入框行为逻辑 与已经被隐藏的toolbar上的输入框行为保持一致 以解决移动光标之后输入的文字无法传入cocos中的问题
+    [(UITextField*)[inputbox inputOnView] addTarget:delegate action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
     UIBarButtonItem *textFieldItem = [[UIBarButtonItem alloc] initWithCustomView:textField];
     
     if (!btnHandler){
@@ -455,7 +457,7 @@ static EditboxManager *instance = nil;
                             initWithFrame:CGRectMake(0,
                                                      0,
                                                      BUTTON_WIDTH,
-                                                     0)];
+                                                     0)];//Andy fix:按钮高度设置为0
     [confirmBtn addTarget:btnHandler
                    action:@selector(buttonTapped:)
          forControlEvents:UIControlEventTouchUpInside];
@@ -469,7 +471,7 @@ static EditboxManager *instance = nil;
     
     [toolbar setItems:@[textFieldItem, confirm] animated:YES];
     
-    toolbar.hidden = YES;
+    toolbar.hidden = YES;//Andy fix :ToolBar隐藏
     UIBarButtonItem* textFieldBarButtonItem = [self setInputWidthOf:toolbar];
    
     ((UITextField*)[inputbox inputOnView]).inputAccessoryView = toolbar;
@@ -517,6 +519,22 @@ static EditboxManager *instance = nil;
     ((UITextView*)[ret inputOnView]).text = [NSString stringWithUTF8String:showInfo->defaultValue.c_str()];
     return ret;
 }
+//MARK: Andy 此处创建原生输入框 从ShowInfo得到各种参数 调整输入框的位置 然后隐藏cocos原本的输入框 以解决光标不显示的问题 INPUTBOX_HIDDEN：是否显示原生输入框
+//
+//
+NSString *decimalToHexColor(unsigned int decimalColor) {
+    unsigned int blue = (decimalColor >> 16) & 0xFF;
+    unsigned int green = (decimalColor >> 8) & 0xFF;
+    unsigned int red = decimalColor & 0xFF;
+    return [NSString stringWithFormat:@"#%02X%02X%02X", red, green, blue];
+}
+- (UIColor *)colorFromHexString:(NSString *)hexString {
+    unsigned rgbValue = 0;
+    NSScanner *scanner = [NSScanner scannerWithString:hexString];
+    [scanner setScanLocation:1];
+    [scanner scanHexInt:&rgbValue];
+    return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
+}
 - (id) createTextField:    (const cc::EditBox::ShowInfo*)showInfo {
     InputBoxPair* ret;
     CGRect viewRect = UIApplication.sharedApplication.delegate.window.rootViewController.view.frame;
@@ -551,6 +569,76 @@ static EditboxManager *instance = nil;
     setTextFieldReturnType((UITextField*)[ret inputOnView], showInfo->confirmType);
     setTextFieldKeyboardType((UITextField*)[ret inputOnToolbar], showInfo->inputType);
     setTextFieldKeyboardType((UITextField*)[ret inputOnView], showInfo->inputType);
+    
+   
+    
+    
+//    修改UITextField各种属性 适配到cocos画面
+    
+//    ((UITextField*)[ret inputOnView]).layer.borderWidth = 2.0;
+    
+    NSString* fontColor = decimalToHexColor(showInfo->fontColor);
+    
+    CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
+    
+    CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
+    
+    CGFloat posY = screenHeight - (showInfo->uvY * screenHeight) - (showInfo->uvHeight * screenHeight);
+    
+    [(UITextField*)[ret inputOnView] setFrame:CGRectMake(showInfo->uvX * screenWidth,
+                                                         posY,
+                                                         showInfo->uvWidth * screenWidth,
+                                                         showInfo->uvHeight * screenHeight)];
+    
+    ((UITextField*)[ret inputOnView]).textColor = [self colorFromHexString:fontColor];
+    
+
+    if (showInfo->textHorizontalAlignment == cc::EditBox::LEFT){
+        ((UITextField*)[ret inputOnView]).textAlignment = NSTextAlignmentLeft;
+    }
+    else if (showInfo->textHorizontalAlignment == cc::EditBox::RIGHT){
+        ((UITextField*)[ret inputOnView]).textAlignment = NSTextAlignmentRight;
+    }
+    else if(showInfo->textHorizontalAlignment == cc::EditBox::HORIZONTAL_CENTER) {
+        ((UITextField*)[ret inputOnView]).textAlignment = NSTextAlignmentCenter;
+    }
+    
+    NSString* fontPath =  [NSString stringWithUTF8String:(showInfo->fontPath.c_str())];
+    
+    NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
+
+    NSString *realFontPath = [resourcePath stringByAppendingPathComponent:fontPath];
+
+    //字体数据
+    NSData *fontData = [NSData dataWithContentsOfFile:realFontPath];
+    if (fontData != nil) {
+        //动态加载
+        CFErrorRef error = NULL;
+        CGDataProviderRef providerRef = CGDataProviderCreateWithCFData((CFDataRef)fontData);
+        CGFontRef fontRef = CGFontCreateWithDataProvider(providerRef);
+        if (!CTFontManagerRegisterGraphicsFont(fontRef, &error)) {
+    //        NSLog(@"%@", (__bridge NSString *)CFErrorCopyDescription(error));
+            // 获取最后一个斜杠的范围
+            NSRange lastSlashRange = [fontPath rangeOfString:@"/" options:NSBackwardsSearch];
+            if (lastSlashRange.location != NSNotFound) {
+                // 截取最后一个斜杠之后的字符串
+                NSString *fileNameWithExtension = [fontPath substringFromIndex:NSMaxRange(lastSlashRange)];
+                
+                // 获取点之前的部分
+                NSRange dotRange = [fileNameWithExtension rangeOfString:@"."];
+                if (dotRange.location != NSNotFound) {
+                    NSString *fileNameWithoutExtension = [fileNameWithExtension substringToIndex:dotRange.location];
+    //                NSLog(@"文件名: %@", fileNameWithoutExtension);
+                    ((UITextField*)[ret inputOnView]).font = [UIFont fontWithName:fileNameWithoutExtension size:showInfo->fontSize];
+                }
+            }
+            
+        }else{
+            NSString *fontName = (__bridge NSString *)CGFontCopyPostScriptName(fontRef);
+            ((UITextField*)[ret inputOnView]).font = [UIFont fontWithName:fontName size:showInfo->fontSize];
+        }
+    }
+    
     return ret;
 }
 

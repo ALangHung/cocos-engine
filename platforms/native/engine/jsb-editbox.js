@@ -127,7 +127,9 @@
             console.log("[beginEditing] viewScaleY : " + cc.view._scaleY);
             delegate.node.getWorldMatrix(worldMat);
             console.log("[beginEditing] worldMat.m05 : " + worldMat.m05);
-            const fontSize = editLabel.fontSize * viewScaleY * worldMat.m05;
+            const dpr = jsb.device.getDevicePixelRatio() || 1;
+            console.log("[beginEditing] dpr : " + dpr);
+            const fontSize = editLabel.fontSize * viewScaleY * worldMat.m05 / dpr;
 
             // const node = this._delegate.node;
             // node.getWorldMatrix(worldMat);
