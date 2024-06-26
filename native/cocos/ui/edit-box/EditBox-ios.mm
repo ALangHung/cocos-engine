@@ -603,43 +603,86 @@ NSString *decimalToHexColor(unsigned int decimalColor) {
         ((UITextField*)[ret inputOnView]).textAlignment = NSTextAlignmentCenter;
     }
     
-    NSString* fontPath =  [NSString stringWithUTF8String:(showInfo->fontPath.c_str())];
-    
-    NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
-
-    NSString *realFontPath = [resourcePath stringByAppendingPathComponent:fontPath];
-
-    //字体数据
-    NSData *fontData = [NSData dataWithContentsOfFile:realFontPath];
-    if (fontData != nil) {
-        //动态加载
-        CFErrorRef error = NULL;
-        CGDataProviderRef providerRef = CGDataProviderCreateWithCFData((CFDataRef)fontData);
-        CGFontRef fontRef = CGFontCreateWithDataProvider(providerRef);
-        if (!CTFontManagerRegisterGraphicsFont(fontRef, &error)) {
-    //        NSLog(@"%@", (__bridge NSString *)CFErrorCopyDescription(error));
-            // 获取最后一个斜杠的范围
-            NSRange lastSlashRange = [fontPath rangeOfString:@"/" options:NSBackwardsSearch];
-            if (lastSlashRange.location != NSNotFound) {
-                // 截取最后一个斜杠之后的字符串
-                NSString *fileNameWithExtension = [fontPath substringFromIndex:NSMaxRange(lastSlashRange)];
-                
-                // 获取点之前的部分
-                NSRange dotRange = [fileNameWithExtension rangeOfString:@"."];
-                if (dotRange.location != NSNotFound) {
-                    NSString *fileNameWithoutExtension = [fileNameWithExtension substringToIndex:dotRange.location];
-    //                NSLog(@"文件名: %@", fileNameWithoutExtension);
-                    ((UITextField*)[ret inputOnView]).font = [UIFont fontWithName:fileNameWithoutExtension size:showInfo->fontSize];
+    NSString *fontPath = [NSString stringWithUTF8String:(showInfo->fontPath.c_str())];
+    NSLog(@"fontPath: %@", fontPath);
+    if (fontPath.length > 0) {
+        NSString *fileNameWithoutExtension = @"";
+        
+        // 获取最后一个斜杠的范围
+        NSRange lastSlashRange = [fontPath rangeOfString:@"/" options:NSBackwardsSearch];
+        if (lastSlashRange.location != NSNotFound) {
+            // 截取最后一个斜杠之后的字符串
+            NSString *fileNameWithExtension = [fontPath substringFromIndex:NSMaxRange(lastSlashRange)];
+            // 获取点之前的部分
+            NSRange dotRange = [fileNameWithExtension rangeOfString:@"."];
+            if (dotRange.location != NSNotFound) {
+                fileNameWithoutExtension = [fileNameWithExtension substringToIndex:dotRange.location];
+                NSLog(@"文件名: %@", fileNameWithoutExtension);
+            }
+        }
+        
+        // 检查字体是否已经注册
+        if ([self isFontRegistered:fileNameWithoutExtension]) {
+            // 字体已注册时直接使用字体
+            ((UITextField*)[ret inputOnView]).font = [UIFont fontWithName:fileNameWithoutExtension size:showInfo->fontSize];
+            return ret;
+        } else {
+            // 未注册时加载字体并注册
+            NSString *resourcePath = [[NSBundle mainBundle] resourcePath];
+            NSString *realFontPath = [resourcePath stringByAppendingPathComponent:fontPath];
+            
+            //字体数据
+            NSData *fontData = [NSData dataWithContentsOfFile:realFontPath];
+            if (fontData != nil) {
+                //动态加载
+                CFErrorRef error = NULL;
+                CGDataProviderRef providerRef = CGDataProviderCreateWithCFData((CFDataRef)fontData);
+                CGFontRef fontRef = CGFontCreateWithDataProvider(providerRef);
+                //注册字体
+                if (CTFontManagerRegisterGraphicsFont(fontRef, &error)) {
+                    // 注册字体成功使用字体
+                    NSString *fontName = (__bridge NSString *)CGFontCopyPostScriptName(fontRef);
+                    ((UITextField*)[ret inputOnView]).font = [UIFont fontWithName:fontName size:showInfo->fontSize];
+                    
+                    // 释放资源
+                    CFRelease(fontRef);
+                    CFRelease(providerRef);
+                    return ret;
+                } else {
+                    // 注册字体失败，处理错误并释放资源
+                    if (error != NULL) {
+                        CFStringRef errorDescription = CFErrorCopyDescription(error);
+                        NSLog(@"Failed to register font: %@", errorDescription);
+                        
+                        // 释放资源
+                        CFRelease(errorDescription);
+                        CFRelease(error);
+                    }
+                    
+                    // 释放资源
+                    if (fontRef != NULL) CFRelease(fontRef);
+                    if (providerRef != NULL) CFRelease(providerRef);
                 }
             }
-            
-        }else{
-            NSString *fontName = (__bridge NSString *)CGFontCopyPostScriptName(fontRef);
-            ((UITextField*)[ret inputOnView]).font = [UIFont fontWithName:fontName size:showInfo->fontSize];
         }
     }
     
+    // 如果字体加载失败或未能找到字体，则使用当前字体并调整大小
+    UIFont *currentFont = ((UITextField*)[ret inputOnView]).font;
+    ((UITextField*)[ret inputOnView]).font = [currentFont fontWithSize:showInfo->fontSize];
+
     return ret;
+}
+
+- (BOOL)isFontRegistered:(NSString *)fontName {
+    NSArray *fontFamilyNames = [UIFont familyNames];
+    for (NSString *familyName in fontFamilyNames) {
+        NSArray *fontNames = [UIFont fontNamesForFamilyName:familyName];
+        if ([fontNames containsObject:fontName]) {
+            return YES;
+        }
+    }
+    return NO;
 }
 
 //TODO: show inputbox with width modified.
