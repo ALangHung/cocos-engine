@@ -701,13 +701,13 @@ NSString *decimalToHexColor(unsigned int decimalColor) {
     
     [view addSubview:[curView inputOnView]];
     [[curView inputOnView] becomeFirstResponder];
-     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-         if(![[curView inputOnToolbar] becomeFirstResponder]) {
-             CC_LOG_ERROR("inputOnToolbar becomeFirstResponder error!");
-         }
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if(![[curView inputOnView] becomeFirstResponder]) {
+            CC_LOG_ERROR("inputOnView becomeFirstResponder error!");
+        }
     });
-
 }
+
 // Change the focus point to the TextField or TextView on the toolbar.
 - (void) hide {
    if ([[curView inputOnToolbar] isFirstResponder]) {
