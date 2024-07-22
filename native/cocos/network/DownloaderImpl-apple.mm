@@ -204,31 +204,31 @@ void DownloaderApple::abort(const std::unique_ptr<IDownloadTask> &task) {
     // create task dictionary
     self.taskDict = [NSMutableDictionary dictionary];
 
-#if CC_PLATFORM == CC_PLATFORM_IOS 
-    // create backgroundSession for iOS to support background download
-    self.downloadSession = [self backgroundURLSession];
-
-    // cancel and save last running tasks
-    [self.downloadSession getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTasks) {
-        for (NSURLSessionDownloadTask *downloadTask in downloadTasks) {
-            // cancelTask with resume Data
-            if ((long)downloadTask.state == 0) {
-                [(NSURLSessionDownloadTask *)downloadTask cancelByProducingResumeData:^(NSData *resumeData) {
-                    if(downloadTask.originalRequest.URL.absoluteString) {
-                        NSString *tempFilePathWithHash = [NSString stringWithFormat:@"%s%lu%s", cc::FileUtils::getInstance()->getWritablePath().c_str(), (unsigned long)[downloadTask.originalRequest.URL.absoluteString hash], _hints.tempFileNameSuffix.c_str()];
-                        [resumeData writeToFile:tempFilePathWithHash atomically:YES];
-                    } else if (downloadTask.currentRequest.URL.absoluteString) {
-                            NSString *tempFilePathWithHash = [NSString stringWithFormat:@"%s%lu%s", cc::FileUtils::getInstance()->getWritablePath().c_str(), (unsigned long)[downloadTask.currentRequest.URL.absoluteString hash], _hints.tempFileNameSuffix.c_str()];
-                        [resumeData writeToFile:tempFilePathWithHash atomically:YES];
-                    }
-                }];
-            }
-        }
-    }];
-#else
+//#if CC_PLATFORM == CC_PLATFORM_IOS 
+//    // create backgroundSession for iOS to support background download
+//    self.downloadSession = [self backgroundURLSession];
+//
+//    // cancel and save last running tasks
+//    [self.downloadSession getTasksWithCompletionHandler:^(NSArray *dataTasks, NSArray *uploadTasks, NSArray *downloadTasks) {
+//        for (NSURLSessionDownloadTask *downloadTask in downloadTasks) {
+//            // cancelTask with resume Data
+//            if ((long)downloadTask.state == 0) {
+//                [(NSURLSessionDownloadTask *)downloadTask cancelByProducingResumeData:^(NSData *resumeData) {
+//                    if(downloadTask.originalRequest.URL.absoluteString) {
+//                        NSString *tempFilePathWithHash = [NSString stringWithFormat:@"%s%lu%s", cc::FileUtils::getInstance()->getWritablePath().c_str(), (unsigned long)[downloadTask.originalRequest.URL.absoluteString hash], _hints.tempFileNameSuffix.c_str()];
+//                        [resumeData writeToFile:tempFilePathWithHash atomically:YES];
+//                    } else if (downloadTask.currentRequest.URL.absoluteString) {
+//                            NSString *tempFilePathWithHash = [NSString stringWithFormat:@"%s%lu%s", cc::FileUtils::getInstance()->getWritablePath().c_str(), (unsigned long)[downloadTask.currentRequest.URL.absoluteString hash], _hints.tempFileNameSuffix.c_str()];
+//                        [resumeData writeToFile:tempFilePathWithHash atomically:YES];
+//                    }
+//                }];
+//            }
+//        }
+//    }];
+//#else
     NSURLSessionConfiguration *defaultConfig = [NSURLSessionConfiguration defaultSessionConfiguration];
     self.downloadSession = [NSURLSession sessionWithConfiguration:defaultConfig delegate:self delegateQueue:[NSOperationQueue mainQueue]]; 
-#endif
+//#endif
     return self;
 }
 
